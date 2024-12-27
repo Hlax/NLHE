@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <None Include="..\..\NLHE.uproject" />
+    <Filter Include="Source">
+      <UniqueIdentifier>{F31BBDD1-B3E8-3BCC-9652-680E16935819}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Source\NLHE.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\..\Source\NLHEEditor.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\..\.vsconfig" />
+    <Filter Include="Config">
+      <UniqueIdentifier>{FA535FFB-25E1-3D20-B416-52F9BE21E06E}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Config\DefaultEditor.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultEngine.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultGame.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultInput.ini">
+      <Filter>Config</Filter>
+    </None>
+    <Filter Include="Source\NLHE">
+      <UniqueIdentifier>{25E89E71-C4E0-310F-B5D8-BB0A9B130898}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Source\NLHE\NLHE.Build.cs">
+      <Filter>Source\NLHE</Filter>
+    </None>
+    <ClCompile Include="..\..\Source\NLHE\NLHE.cpp">
+      <Filter>Source\NLHE</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\NLHE.h">
+      <Filter>Source\NLHE</Filter>
+    </ClCompile>
+    <Filter Include="Source\NLHE\Private">
+      <UniqueIdentifier>{2C1D073C-2B04-373E-9625-CB8C7A9ADF07}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\NLHE\Private\AIPlayer.cpp">
+      <Filter>Source\NLHE\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Private\BasePlayer.cpp">
+      <Filter>Source\NLHE\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Private\BettingManager.cpp">
+      <Filter>Source\NLHE\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Private\Card.cpp">
+      <Filter>Source\NLHE\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Private\CardUtil.cpp">
+      <Filter>Source\NLHE\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Private\Dealer.cpp">
+      <Filter>Source\NLHE\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Private\Deck.cpp">
+      <Filter>Source\NLHE\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Private\GameManager.cpp">
+      <Filter>Source\NLHE\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Private\PokerGameEngine.cpp">
+      <Filter>Source\NLHE\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Private\PokerGameState.cpp">
+      <Filter>Source\NLHE\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Private\PotManager.cpp">
+      <Filter>Source\NLHE\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Private\TableManager.cpp">
+      <Filter>Source\NLHE\Private</Filter>
+    </ClCompile>
+    <Filter Include="Source\NLHE\Public">
+      <UniqueIdentifier>{7B59A46F-7E74-312D-8B28-806AAB7D2D3B}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\NLHE\Public\AIPlayer.h">
+      <Filter>Source\NLHE\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Public\BasePlayer.h">
+      <Filter>Source\NLHE\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Public\BettingManager.h">
+      <Filter>Source\NLHE\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Public\Card.h">
+      <Filter>Source\NLHE\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Public\CardUtil.h">
+      <Filter>Source\NLHE\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Public\Dealer.h">
+      <Filter>Source\NLHE\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Public\Deck.h">
+      <Filter>Source\NLHE\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Public\GameManager.h">
+      <Filter>Source\NLHE\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Public\PokerGameEngine.h">
+      <Filter>Source\NLHE\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Public\PokerGameState.h">
+      <Filter>Source\NLHE\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Public\PokerTerms.h">
+      <Filter>Source\NLHE\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Public\PotManager.h">
+      <Filter>Source\NLHE\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Public\TableManager.h">
+      <Filter>Source\NLHE\Public</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

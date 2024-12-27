@@ -1,0 +1,14 @@
+{
+	"Targets": [
+		{
+			"Name": "NLHE",
+			"Path": "..\\Source\\NLHE.Target.cs",
+			"Type": "Game"
+		},
+		{
+			"Name": "NLHEEditor",
+			"Path": "..\\Source\\NLHEEditor.Target.cs",
+			"Type": "Editor"
+		}
+	]
+}
