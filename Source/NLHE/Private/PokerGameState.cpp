@@ -1,12 +1,18 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
+// PokerGameState.cpp
 #include "PokerGameState.h"
+#include "Net/UnrealNetwork.h"
 
-PokerGameState::PokerGameState()
+APokerGameState::APokerGameState()
+    : TotalPot(0)
+    , CurrentPhase(EGamePhase::WaitingToStart)
 {
 }
 
-PokerGameState::~PokerGameState()
+void APokerGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(APokerGameState, CommunityCards);
+    DOREPLIFETIME(APokerGameState, TotalPot);
+    DOREPLIFETIME(APokerGameState, CurrentPhase);
 }

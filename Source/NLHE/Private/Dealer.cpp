@@ -6,7 +6,7 @@ void ADealer::ShuffleDeck()
 {
     Deck.Shuffle();
     UE_LOG(LogTemp, Log, TEXT("Deck shuffled."));
-    LogTopCards(20); // Log the top 20 cards after shuffling
+    LogTopCards(52); // Log the top 20 cards after shuffling
 }
 
 // Log the top N cards in the deck for debugging
@@ -34,22 +34,19 @@ FCard ADealer::SafeDrawCard()
     }
 }
 
+// In Dealer.cpp
 void ADealer::DealHoleCards(int32 NumSeats, int32 CardsPerSeat)
 {
-    // Log the top 20 cards before dealing
-    UE_LOG(LogTemp, Log, TEXT("Top 20 cards before dealing hole cards:"));
-    const TArray<FCard>& Cards = Deck.GetCards(); // Access deck directly
-    for (int32 i = 0; i < FMath::Min(Cards.Num(), 20); i++)
-    {
-        UE_LOG(LogTemp, Log, TEXT("Card %d: %s"), i + 1, *Cards[i].ToString());
-    }
+    // Remove the ShuffleDeck() call from here
 
-    // Deal hole cards
+    UE_LOG(LogTemp, Log, TEXT("Starting to deal hole cards..."));
+
+    // Deal the cards from the already shuffled deck
     for (int32 i = 0; i < CardsPerSeat; i++)
     {
         for (int32 SeatIndex = 0; SeatIndex < NumSeats; SeatIndex++)
         {
-            FCard Card = Deck.DrawCard();
+            FCard Card = SafeDrawCard();
             UE_LOG(LogTemp, Log, TEXT("Seat %d: Dealt %s"), SeatIndex, *Card.ToString());
         }
     }

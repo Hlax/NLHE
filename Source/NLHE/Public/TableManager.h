@@ -1,8 +1,37 @@
+// TableManager.h
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "PokerTerms.h"
 #include "TableManager.generated.h"
+
+class AAIPlayer;
+
+USTRUCT()
+struct NLHE_API FSeat
+{
+    GENERATED_BODY()
+
+    UPROPERTY()
+    AAIPlayer* Player;
+
+    UPROPERTY()
+    int32 Stack;
+
+    UPROPERTY()
+    bool IsActive;
+
+    UPROPERTY()
+    EPosition Position;
+
+    FSeat()
+        : Player(nullptr)
+        , Stack(0)
+        , IsActive(false)
+        , Position(EPosition::None)
+    {}
+};
 
 UCLASS()
 class NLHE_API ATableManager : public AActor
@@ -12,16 +41,25 @@ class NLHE_API ATableManager : public AActor
 public:
     ATableManager();
 
-    // Get the number of seats at the table
-    int32 GetSeatCount() const;
+    void MoveDealerButton();
+    int32 GetNextActivePlayer() const;
+    void AssignPlayerToSeat(int32 SeatIndex, AAIPlayer* Player);
+    void InitializeTable(int32 NumSeats);
 
-protected:
-    virtual void BeginPlay() override;
+    // Getters
+    int32 GetSeatCount() const { return Seats.Num(); }
+    int32 GetButtonPosition() const { return ButtonPosition; }
+    const FSeat& GetSeat(int32 Index) const { return Seats[Index]; }
 
 private:
-    // Array representing the seats at the table (empty for now)
-    TArray<bool> Seats;
+    UPROPERTY()
+    TArray<FSeat> Seats;
 
-    // Initialize seats (6 seats for this setup)
-    void InitializeSeats();
+    UPROPERTY()
+    int32 ButtonPosition;
+
+    UPROPERTY()
+    int32 CurrentActionOn;
+
+    static constexpr int32 DEFAULT_SEAT_COUNT = 6;
 };

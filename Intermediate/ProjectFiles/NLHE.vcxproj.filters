@@ -11,6 +11,8 @@
     <None Include="..\..\Source\NLHEEditor.Target.cs">
       <Filter>Source</Filter>
     </None>
+    <None Include="..\..\.gitattributes" />
+    <None Include="..\..\.gitignore" />
     <None Include="..\..\.vsconfig" />
     <Filter Include="Config">
       <UniqueIdentifier>{FA535FFB-25E1-3D20-B416-52F9BE21E06E}</UniqueIdentifier>
@@ -57,6 +59,9 @@
     <ClCompile Include="..\..\Source\NLHE\Private\CardUtil.cpp">
       <Filter>Source\NLHE\Private</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Private\ChipManager.cpp">
+      <Filter>Source\NLHE\Private</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\NLHE\Private\Dealer.cpp">
       <Filter>Source\NLHE\Private</Filter>
     </ClCompile>
@@ -94,6 +99,9 @@
       <Filter>Source\NLHE\Public</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\NLHE\Public\CardUtil.h">
+      <Filter>Source\NLHE\Public</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\NLHE\Public\ChipManager.h">
       <Filter>Source\NLHE\Public</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\NLHE\Public\Dealer.h">
