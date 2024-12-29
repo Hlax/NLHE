@@ -3,24 +3,25 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Deck.h"
+#include "Card.h"
 #include "Dealer.generated.h"
 
 UCLASS()
-class NLHE_API ADealer : public AActor
-{
+class NLHE_API ADealer : public AActor {
     GENERATED_BODY()
 
 public:
+    ADealer();
+
     void ShuffleDeck();
-    void DealHoleCards(int32 NumSeats, int32 CardsPerSeat);
+    void LogTopCards(int32 Count) const;
+    FCard SafeDrawCard();
+    void DealHoleCards(const TArray<int32>& ActiveSeats, int32 CardsPerSeat);
     void DealFlop();
     void DealTurn();
     void DealRiver();
     void ResetDeck();
-    FCard SafeDrawCard();
-    void LogTopCards(int32 Count) const; // Logs the top N cards of the deck
 
 private:
-    FDeck Deck;
+    TArray<FCard> Deck;
 };

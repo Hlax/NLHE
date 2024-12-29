@@ -14,14 +14,7 @@ PRAGMA_DISABLE_DEPRECATION_WARNINGS
 #endif
 #define NLHE_TableManager_generated_h
 
-#define FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_TableManager_h_14_GENERATED_BODY \
-	friend struct Z_Construct_UScriptStruct_FSeat_Statics; \
-	static class UScriptStruct* StaticStruct();
-
-
-template<> NLHE_API UScriptStruct* StaticStruct<struct FSeat>();
-
-#define FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_TableManager_h_39_INCLASS_NO_PURE_DECLS \
+#define FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_TableManager_h_11_INCLASS_NO_PURE_DECLS \
 private: \
 	static void StaticRegisterNativesATableManager(); \
 	friend struct Z_Construct_UClass_ATableManager_Statics; \
@@ -30,7 +23,7 @@ public: \
 	DECLARE_SERIALIZER(ATableManager)
 
 
-#define FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_TableManager_h_39_ENHANCED_CONSTRUCTORS \
+#define FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_TableManager_h_11_ENHANCED_CONSTRUCTORS \
 private: \
 	/** Private move- and copy-constructors, should never be used */ \
 	ATableManager(ATableManager&&); \
@@ -42,12 +35,12 @@ public: \
 	NO_API virtual ~ATableManager();
 
 
-#define FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_TableManager_h_36_PROLOG
-#define FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_TableManager_h_39_GENERATED_BODY \
+#define FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_TableManager_h_9_PROLOG
+#define FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_TableManager_h_11_GENERATED_BODY \
 PRAGMA_DISABLE_DEPRECATION_WARNINGS \
 public: \
-	FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_TableManager_h_39_INCLASS_NO_PURE_DECLS \
-	FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_TableManager_h_39_ENHANCED_CONSTRUCTORS \
+	FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_TableManager_h_11_INCLASS_NO_PURE_DECLS \
+	FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_TableManager_h_11_ENHANCED_CONSTRUCTORS \
 private: \
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
 

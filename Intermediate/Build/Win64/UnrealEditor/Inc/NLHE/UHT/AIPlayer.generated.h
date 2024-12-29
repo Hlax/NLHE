@@ -14,16 +14,17 @@ PRAGMA_DISABLE_DEPRECATION_WARNINGS
 #endif
 #define NLHE_AIPlayer_generated_h
 
-#define FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_AIPlayer_h_13_INCLASS_NO_PURE_DECLS \
+#define FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_AIPlayer_h_11_INCLASS_NO_PURE_DECLS \
 private: \
 	static void StaticRegisterNativesAAIPlayer(); \
 	friend struct Z_Construct_UClass_AAIPlayer_Statics; \
 public: \
 	DECLARE_CLASS(AAIPlayer, AActor, COMPILED_IN_FLAGS(0 | CLASS_Config), CASTCLASS_None, TEXT("/Script/NLHE"), NO_API) \
-	DECLARE_SERIALIZER(AAIPlayer)
+	DECLARE_SERIALIZER(AAIPlayer) \
+	virtual UObject* _getUObject() const override { return const_cast<AAIPlayer*>(this); }
 
 
-#define FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_AIPlayer_h_13_ENHANCED_CONSTRUCTORS \
+#define FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_AIPlayer_h_11_ENHANCED_CONSTRUCTORS \
 private: \
 	/** Private move- and copy-constructors, should never be used */ \
 	AAIPlayer(AAIPlayer&&); \
@@ -35,12 +36,12 @@ public: \
 	NO_API virtual ~AAIPlayer();
 
 
-#define FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_AIPlayer_h_10_PROLOG
-#define FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_AIPlayer_h_13_GENERATED_BODY \
+#define FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_AIPlayer_h_9_PROLOG
+#define FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_AIPlayer_h_11_GENERATED_BODY \
 PRAGMA_DISABLE_DEPRECATION_WARNINGS \
 public: \
-	FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_AIPlayer_h_13_INCLASS_NO_PURE_DECLS \
-	FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_AIPlayer_h_13_ENHANCED_CONSTRUCTORS \
+	FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_AIPlayer_h_11_INCLASS_NO_PURE_DECLS \
+	FID_Users_guestt_OneDrive_Documents_Unreal_Projects_NLHE_Source_NLHE_Public_AIPlayer_h_11_ENHANCED_CONSTRUCTORS \
 private: \
 PRAGMA_ENABLE_DEPRECATION_WARNINGS
 

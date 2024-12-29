@@ -1,216 +1,93 @@
 // GameManager.cpp
 #include "GameManager.h"
-#include "AIPlayer.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 
-AGameManager::AGameManager()
-    : CurrentPhase(EGamePhase::WaitingToStart)
-    , HandCount(0)
-{
+AGameManager::AGameManager() {
+    CurrentPhase = EGamePhase::WaitingToStart;
 }
 
-void AGameManager::BeginPlay()
-{
+void AGameManager::BeginPlay() {
     Super::BeginPlay();
 
-    // Find or spawn required managers
+    // Get references to TableManager, BettingManager, and Dealer
     TableManager = Cast<ATableManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ATableManager::StaticClass()));
-    Dealer = Cast<ADealer>(UGameplayStatics::GetActorOfClass(GetWorld(), ADealer::StaticClass()));
     BettingManager = Cast<ABettingManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ABettingManager::StaticClass()));
+    Dealer = Cast<ADealer>(UGameplayStatics::GetActorOfClass(GetWorld(), ADealer::StaticClass()));
 
-    if (!TableManager || !Dealer || !BettingManager)
-    {
-        UE_LOG(LogTemp, Error, TEXT("Required managers not found in level!"));
+    if (!TableManager || !BettingManager || !Dealer) {
+        UE_LOG(LogTemp, Error, TEXT("TableManager, BettingManager, or Dealer not found in the world!"));
         return;
     }
 
-    // Initialize components
-    TableManager->InitializeTable(6);  // 6-max table
-    BettingManager->InitializePlayerBets(6);
-
-    // Start the game flow
-    AdvancePhase();
+    // Initialize the game
+    StartNewHand();
 }
 
-FPokerActionState AGameManager::CreateCurrentActionState() const
-{
-    FPokerActionState State;
-    State.Phase = CurrentPhase;
-    State.CurrentBet = BettingManager->GetCurrentBet();
-    State.MainPot = BettingManager->GetMainPot();
-    // Add community cards when available
-    State.ActionOn = TableManager->GetNextActivePlayer();
-    return State;
-}
-
-void AGameManager::ProcessBettingRound()
-{
-    UE_LOG(LogTemp, Log, TEXT("=== Starting Betting Round - Phase: %s ==="),
-        *UEnum::GetValueAsString(CurrentPhase));
-
-    UE_LOG(LogTemp, Log, TEXT("Initial Pot: %d, Current Bet: %d"),
-        BettingManager->GetMainPot(),
-        BettingManager->GetCurrentBet());
-
-    int32 CurrentPlayer = TableManager->GetNextActivePlayer();
-    int32 RoundCount = 0;
-
-    while (CurrentPlayer != -1)
-    {
-        UE_LOG(LogTemp, Log, TEXT("--- Betting Round %d, Player %d ---"),
-            RoundCount + 1,
-            CurrentPlayer);
-
-        HandlePlayerAction(CurrentPlayer);
-
-        UE_LOG(LogTemp, Log, TEXT("After Action - Pot: %d, Current Bet: %d"),
-            BettingManager->GetMainPot(),
-            BettingManager->GetCurrentBet());
-
-        CurrentPlayer = TableManager->GetNextActivePlayer();
-        RoundCount++;
-    }
-
-    UE_LOG(LogTemp, Log, TEXT("=== Ending Betting Round - Final Pot: %d ==="),
-        BettingManager->GetMainPot());
-}
-
-void AGameManager::HandlePlayerAction(int32 PlayerIndex)
-{
-    FSeat Seat = TableManager->GetSeat(PlayerIndex);
-    if (!Seat.Player)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("No player in seat %d"), PlayerIndex);
+void AGameManager::StartNewHand() {
+    if (!TableManager || !BettingManager || !Dealer) {
+        UE_LOG(LogTemp, Error, TEXT("Cannot start a new hand without necessary components."));
         return;
     }
 
-    FPokerActionState CurrentState = CreateCurrentActionState();
+    // Assign the dealer button
+    TableManager->AssignDealerButton();
 
-    UE_LOG(LogTemp, Log, TEXT("Handle Action - Seat: %d, Current Bet: %d, Pot: %d"),
-        PlayerIndex,
-        CurrentState.CurrentBet,
-        CurrentState.MainPot);
+    // Assign blinds
+    int32 SmallBlindSeat = TableManager->GetNextActivePlayer(TableManager->GetCurrentDealerSeat());
+    int32 BigBlindSeat = TableManager->GetNextActivePlayer(SmallBlindSeat);
 
-    EPokerAction Action = Seat.Player->DecideAction(CurrentState);
+    UE_LOG(LogTemp, Log, TEXT("Small Blind: Seat %d, Big Blind: Seat %d"), SmallBlindSeat, BigBlindSeat);
 
-    // Calculate bet amount based on action
-    int32 BetAmount = 0;
-    if (Action == EPokerAction::Call)
-    {
-        BetAmount = CurrentState.CurrentBet;
-    }
-
-    // Process the action through betting manager
-    if (!BettingManager->ProcessAction(PlayerIndex, Action, BetAmount))
-    {
-        UE_LOG(LogTemp, Error, TEXT("Failed to process action for player %d"), PlayerIndex);
-    }
-    else
-    {
-        UE_LOG(LogTemp, Log, TEXT("Action processed - Player: %d, Action: %s, Amount: %d"),
-            PlayerIndex,
-            *UEnum::GetValueAsString(Action),
-            BetAmount);
-    }
-}
-
-void AGameManager::OnWaitingToStart()
-{
-    if (TableManager && TableManager->GetSeatCount() == 6)
-    {
-        UE_LOG(LogTemp, Log, TEXT("All seats are filled. Starting game..."));
-        CurrentPhase = EGamePhase::Deal;
-        AdvancePhase();
-    }
-}
-
-void AGameManager::OnDeal()
-{
+    // Shuffle cards
     Dealer->ShuffleDeck();
-    TableManager->MoveDealerButton();
-    BettingManager->CollectBlinds();
-    Dealer->DealHoleCards(6, 2);
-    CurrentPhase = EGamePhase::Preflop;
-    AdvancePhase();
+
+    // Deal hole cards
+    TArray<int32> ActiveSeats = TableManager->GetActiveSeats();
+    Dealer->DealHoleCards(ActiveSeats, 2);
+
+    // Initialize the betting round
+    BettingManager->InitializeBettingRound(ActiveSeats, TableManager->GetCurrentDealerSeat());
+
+    // Move to the Pre-Flop phase
+    CurrentPhase = EGamePhase::PreFlop;
+    AdvanceGamePhase();
 }
 
-void AGameManager::OnPreflop()
-{
-    ProcessBettingRound();
-    BettingManager->ResetForNewStreet();
-    CurrentPhase = EGamePhase::Flop;
-    AdvancePhase();
-}
+void AGameManager::AdvanceGamePhase() {
+    switch (CurrentPhase) {
+    case EGamePhase::PreFlop:
+        UE_LOG(LogTemp, Log, TEXT("Starting Pre-Flop betting..."));
+        // The BettingManager handles the betting logic for this phase
+        break;
 
-void AGameManager::OnFlop()
-{
-    Dealer->DealFlop();
-    ProcessBettingRound();
-    BettingManager->ResetForNewStreet();
-    CurrentPhase = EGamePhase::Turn;
-    AdvancePhase();
-}
+    case EGamePhase::Flop:
+        UE_LOG(LogTemp, Log, TEXT("Revealing Flop..."));
+        Dealer->DealFlop();
+        BettingManager->InitializeBettingRound(TableManager->GetActiveSeats(), TableManager->GetCurrentDealerSeat());
+        CurrentPhase = EGamePhase::Turn;
+        break;
 
-void AGameManager::OnTurn()
-{
-    Dealer->DealTurn();
-    ProcessBettingRound();
-    BettingManager->ResetForNewStreet();
-    CurrentPhase = EGamePhase::River;
-    AdvancePhase();
-}
+    case EGamePhase::Turn:
+        UE_LOG(LogTemp, Log, TEXT("Revealing Turn..."));
+        Dealer->DealTurn();
+        BettingManager->InitializeBettingRound(TableManager->GetActiveSeats(), TableManager->GetCurrentDealerSeat());
+        CurrentPhase = EGamePhase::River;
+        break;
 
-void AGameManager::OnRiver()
-{
-    Dealer->DealRiver();
-    ProcessBettingRound();
-    BettingManager->ResetForNewStreet();
-    CurrentPhase = EGamePhase::Showdown;
-    AdvancePhase();
-}
+    case EGamePhase::River:
+        UE_LOG(LogTemp, Log, TEXT("Revealing River..."));
+        Dealer->DealRiver();
+        BettingManager->InitializeBettingRound(TableManager->GetActiveSeats(), TableManager->GetCurrentDealerSeat());
+        CurrentPhase = EGamePhase::Showdown;
+        break;
 
-void AGameManager::OnShowdown()
-{
-    UE_LOG(LogTemp, Log, TEXT("Showdown"));
-    CurrentPhase = EGamePhase::EndHand;
-    AdvancePhase();
-}
+    case EGamePhase::Showdown:
+        UE_LOG(LogTemp, Log, TEXT("Showdown phase... Determining winner."));
+        StartNewHand();
+        break;
 
-void AGameManager::OnEndHand()
-{
-    UE_LOG(LogTemp, Log, TEXT("Distribute Pot"));
-    Dealer->ResetDeck();
-
-    if (++HandCount < 3)
-    {
-        CurrentPhase = EGamePhase::Deal;
-        AdvancePhase();
+    default:
+        break;
     }
-    else
-    {
-        UE_LOG(LogTemp, Log, TEXT("Game Over. Max hands played."));
-    }
-}
-
-void AGameManager::AdvancePhase()
-{
-    LogPhase();
-
-    switch (CurrentPhase)
-    {
-    case EGamePhase::WaitingToStart: OnWaitingToStart(); break;
-    case EGamePhase::Deal:          OnDeal(); break;
-    case EGamePhase::Preflop:       OnPreflop(); break;
-    case EGamePhase::Flop:          OnFlop(); break;
-    case EGamePhase::Turn:          OnTurn(); break;
-    case EGamePhase::River:         OnRiver(); break;
-    case EGamePhase::Showdown:      OnShowdown(); break;
-    case EGamePhase::EndHand:       OnEndHand(); break;
-    }
-}
-
-void AGameManager::LogPhase() const
-{
-    UE_LOG(LogTemp, Log, TEXT("Current Phase: %s"), *UEnum::GetValueAsString(CurrentPhase));
 }

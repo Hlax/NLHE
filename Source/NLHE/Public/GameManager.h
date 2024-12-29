@@ -1,55 +1,38 @@
+// GameManager.h
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "PokerTerms.h"
-#include "BettingManager.h"
 #include "TableManager.h"
+#include "BettingManager.h"
 #include "Dealer.h"
 #include "GameManager.generated.h"
 
 UCLASS()
-class NLHE_API AGameManager : public AGameModeBase
-{
+class NLHE_API AGameManager : public AGameModeBase {
     GENERATED_BODY()
 
 public:
     AGameManager();
 
-protected:
     virtual void BeginPlay() override;
+    void StartNewHand();
+    void AdvanceGamePhase();
 
 private:
-    UPROPERTY()
-    EGamePhase CurrentPhase;
-
-    UPROPERTY()
-    int32 HandCount;
-
-    UPROPERTY()
     ATableManager* TableManager;
-
-    UPROPERTY()
+    ABettingManager* BettingManager;
     ADealer* Dealer;
 
-    UPROPERTY()
-    ABettingManager* BettingManager;
+    enum class EGamePhase : uint8 {
+        WaitingToStart,
+        Deal,
+        PreFlop,
+        Flop,
+        Turn,
+        River,
+        Showdown
+    };
 
-    void AdvancePhase();
-    void LogPhase() const;
-
-    // Game phase handlers
-    void OnWaitingToStart();
-    void OnDeal();
-    void OnPreflop();
-    void OnFlop();
-    void OnTurn();
-    void OnRiver();
-    void OnShowdown();
-    void OnEndHand();
-
-    // Helper functions for betting rounds
-    void ProcessBettingRound();
-    void HandlePlayerAction(int32 PlayerIndex);
-    FPokerActionState CreateCurrentActionState() const;
+    EGamePhase CurrentPhase;
 };

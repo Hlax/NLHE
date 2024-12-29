@@ -71,7 +71,6 @@ template<> NLHE_API UClass* StaticClass<ADealer>()
 {
 	return ADealer::StaticClass();
 }
-ADealer::ADealer(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer) {}
 DEFINE_VTABLE_PTR_HELPER_CTOR(ADealer);
 ADealer::~ADealer() {}
 // End Class ADealer

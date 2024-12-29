@@ -1,128 +1,112 @@
 // TableManager.cpp
 #include "TableManager.h"
-#include "AIPlayer.h"
+#include "Kismet/KismetMathLibrary.h"
 
-ATableManager::ATableManager()
-    : ButtonPosition(0)
-    , CurrentActionOn(0)
-{
+ATableManager::ATableManager() {
+    PrimaryActorTick.bCanEverTick = false;
+    CurrentDealerSeat = -1;
+    CurrentActiveSeat = -1;
 }
 
-void ATableManager::InitializeTable(int32 NumSeats)
-{
-    Seats.SetNum(NumSeats);
-    for (auto& Seat : Seats)
-    {
-        Seat = FSeat();
+void ATableManager::AssignPlayerToSeat(int32 Seat, AAIPlayer* Player) {
+    if (!Seats.Contains(Seat)) {
+        Seats.Add(Seat, Player);
+        UE_LOG(LogTemp, Log, TEXT("Player assigned to Seat %d"), Seat);
     }
-
-    ButtonPosition = 0;
-    CurrentActionOn = 0;
-
-    UE_LOG(LogTemp, Log, TEXT("Table initialized with %d seats."), NumSeats);
 }
 
-void ATableManager::MoveDealerButton()
-{
-    // Find next active seat for button
-    do {
-        ButtonPosition = (ButtonPosition + 1) % Seats.Num();
-    } while (!Seats[ButtonPosition].IsActive && ButtonPosition != 0);
+bool ATableManager::IsPlayerActive(int32 Seat) const {
+    if (Seats.Contains(Seat)) {
+        AAIPlayer* Player = Seats[Seat];
+        return Player != nullptr; // Add more conditions as needed
+    }
+    return false;
+}
 
-    // Update positions for all seats
-    for (int32 i = 0; i < Seats.Num(); i++)
-    {
-        if (!Seats[i].IsActive)
-            continue;
+void ATableManager::SetActivePlayer(int32 Seat) {
+    if (Seats.Contains(Seat)) {
+        CurrentActiveSeat = Seat;
+        UE_LOG(LogTemp, Log, TEXT("Active player set to Seat %d"), Seat);
+    }
+}
 
-        int32 PositionsFromButton = (i - ButtonPosition + Seats.Num()) % Seats.Num();
+AAIPlayer* ATableManager::GetActivePlayer() const {
+    if (Seats.Contains(CurrentActiveSeat)) {
+        return Seats[CurrentActiveSeat];
+    }
+    return nullptr;
+}
 
-        switch (PositionsFromButton)
-        {
-        case 0:
-            Seats[i].Position = EPosition::Button;
+void ATableManager::AssignDealerButton() {
+    TArray<int32> SeatKeys;
+    Seats.GetKeys(SeatKeys);
+
+    if (SeatKeys.Num() > 0) {
+        CurrentDealerSeat = SeatKeys[UKismetMathLibrary::RandomInteger(SeatKeys.Num())];
+        UE_LOG(LogTemp, Log, TEXT("Dealer button assigned to Seat %d"), CurrentDealerSeat);
+    }
+}
+
+void ATableManager::MoveDealerButton() {
+    TArray<int32> SeatKeys;
+    Seats.GetKeys(SeatKeys);
+
+    if (SeatKeys.Num() > 0 && CurrentDealerSeat != -1) {
+        int32 CurrentIndex = SeatKeys.IndexOfByKey(CurrentDealerSeat);
+        int32 NextIndex = (CurrentIndex + 1) % SeatKeys.Num();
+        CurrentDealerSeat = SeatKeys[NextIndex];
+
+        UE_LOG(LogTemp, Log, TEXT("Dealer button moved to Seat %d"), CurrentDealerSeat);
+    }
+}
+
+int32 ATableManager::GetNextActivePlayer(int32 CurrentSeat) const {
+    TArray<int32> SeatKeys;
+    Seats.GetKeys(SeatKeys);
+    SeatKeys.Sort(); // Ensure seats are processed in order
+
+    int32 StartIndex = SeatKeys.IndexOfByKey(CurrentSeat);
+    for (int32 i = 1; i < SeatKeys.Num(); ++i) {
+        int32 NextIndex = (StartIndex + i) % SeatKeys.Num();
+        if (IsPlayerActive(SeatKeys[NextIndex])) {
+            return SeatKeys[NextIndex];
+        }
+    }
+    return -1; // No active players found
+}
+
+void ATableManager::ValidateAndProcessAction(EPokerAction Action, int32 Amount) {
+    if (GetActivePlayer() != nullptr) {
+        UE_LOG(LogTemp, Log, TEXT("Validating action for Seat %d: Action = %d, Amount = %d"), CurrentActiveSeat, (int32)Action, Amount);
+
+        // For now, log the action; validation will go into the BettingManager
+        switch (Action) {
+        case EPokerAction::Fold:
+            UE_LOG(LogTemp, Log, TEXT("Player %d folds."), CurrentActiveSeat);
             break;
-        case 1:
-            Seats[i].Position = EPosition::SmallBlind;
+        case EPokerAction::Check:
+            UE_LOG(LogTemp, Log, TEXT("Player %d checks."), CurrentActiveSeat);
             break;
-        case 2:
-            Seats[i].Position = EPosition::BigBlind;
-            break;
-        case 3:
-            Seats[i].Position = EPosition::UTG;
-            break;
-        case 4:
-            Seats[i].Position = EPosition::HJ;
-            break;
-        case 5:
-            Seats[i].Position = EPosition::CO;
+        case EPokerAction::Bet:
+            UE_LOG(LogTemp, Log, TEXT("Player %d bets %d."), CurrentActiveSeat, Amount);
             break;
         default:
-            Seats[i].Position = EPosition::None;
+            UE_LOG(LogTemp, Warning, TEXT("Unsupported action by Seat %d."), CurrentActiveSeat);
             break;
         }
-
-        // Update player's position if there is one
-        if (Seats[i].Player)
-        {
-            Seats[i].Player->SetPosition(Seats[i].Position);
-        }
     }
-
-    UE_LOG(LogTemp, Log, TEXT("Button moved to position %d"), ButtonPosition);
 }
 
-int32 ATableManager::GetNextActivePlayer() const
-{
-    int32 NextSeat = CurrentActionOn;
-    int32 StartingSeat = NextSeat;
-
-    do {
-        NextSeat = (NextSeat + 1) % Seats.Num();
-        if (Seats[NextSeat].IsActive)
-        {
-            return NextSeat;
+TArray<int32> ATableManager::GetActiveSeats() const {
+    TArray<int32> ActiveSeats;
+    for (const auto& Seat : Seats) {
+        if (IsPlayerActive(Seat.Key)) {
+            ActiveSeats.Add(Seat.Key);
         }
-    } while (NextSeat != StartingSeat);
-
-    // If we get here, no active players found
-    return -1;
+    }
+    return ActiveSeats;
 }
 
-void ATableManager::AssignPlayerToSeat(int32 SeatIndex, AAIPlayer* Player)
-{
-    if (!Seats.IsValidIndex(SeatIndex) || !Player)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Invalid seat assignment attempt"));
-        return;
-    }
-
-    FSeat& Seat = Seats[SeatIndex];
-    if (Seat.IsActive)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Seat %d is already occupied"), SeatIndex);
-        return;
-    }
-
-    Seat.Player = Player;
-    Seat.IsActive = true;
-    Seat.Stack = Player->GetStack();
-
-    // Update position
-    int32 PositionsFromButton = (SeatIndex - ButtonPosition + Seats.Num()) % Seats.Num();
-    switch (PositionsFromButton)
-    {
-    case 0: Seat.Position = EPosition::Button; break;
-    case 1: Seat.Position = EPosition::SmallBlind; break;
-    case 2: Seat.Position = EPosition::BigBlind; break;
-    case 3: Seat.Position = EPosition::UTG; break;
-    case 4: Seat.Position = EPosition::HJ; break;
-    case 5: Seat.Position = EPosition::CO; break;
-    default: Seat.Position = EPosition::None; break;
-    }
-
-    Player->SetPosition(Seat.Position);
-
-    UE_LOG(LogTemp, Log, TEXT("Player assigned to seat %d with position %s"),
-        SeatIndex, *UEnum::GetValueAsString(Seat.Position));
+int32 ATableManager::GetCurrentDealerSeat() const {
+    return CurrentDealerSeat;
 }

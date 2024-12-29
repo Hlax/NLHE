@@ -86,6 +86,9 @@
     <Filter Include="Source\NLHE\Public">
       <UniqueIdentifier>{7B59A46F-7E74-312D-8B28-806AAB7D2D3B}</UniqueIdentifier>
     </Filter>
+    <ClCompile Include="..\..\Source\NLHE\Public\ActionInterface.h">
+      <Filter>Source\NLHE\Public</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\NLHE\Public\AIPlayer.h">
       <Filter>Source\NLHE\Public</Filter>
     </ClCompile>

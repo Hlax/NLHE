@@ -1,185 +1,127 @@
 // BettingManager.cpp
 #include "BettingManager.h"
+#include "Kismet/KismetMathLibrary.h"
 
-ABettingManager::ABettingManager()
-    : CurrentBet(0)
-    , MinRaise(DEFAULT_BIG_BLIND)
-    , MainPot(0)
-{
+ABettingManager::ABettingManager() {
+    PrimaryActorTick.bCanEverTick = false;
+    CurrentBet = 0;
+    CurrentActiveSeat = -1;
+    ActionInProgress = false;
 }
 
-void ABettingManager::InitializePlayerBets(int32 NumPlayers)
-{
-    PlayerBets.SetNum(NumPlayers);
-    for (auto& PlayerBet : PlayerBets)
-    {
-        PlayerBet = FPlayerBets();
+void ABettingManager::InitializeBettingRound(const TArray<int32>& ActiveSeatsInput, int32 Dealer) {
+    ActiveSeats = ActiveSeatsInput;
+    DealerSeat = Dealer;
+    CurrentBet = 0;
+    PlayerContributions.Empty();
+    for (int32 Seat : ActiveSeats) {
+        PlayerContributions.Add(Seat, 0);
     }
+    CurrentActiveSeat = GetNextPlayerToAct(DealerSeat);
+    ActionInProgress = true;
+
+    UE_LOG(LogTemp, Log, TEXT("Betting round initialized. Dealer: %d, First to act: %d"), DealerSeat, CurrentActiveSeat);
 }
 
-bool ABettingManager::ProcessAction(int32 PlayerIndex, EPokerAction Action, int32 Amount)
-{
-    if (!PlayerBets.IsValidIndex(PlayerIndex))
-    {
-        UE_LOG(LogTemp, Warning, TEXT("Invalid player index %d in ProcessAction"), PlayerIndex);
+bool ABettingManager::ValidateAction(int32 Seat, EPokerAction Action, int32 Amount) const {
+    if (Seat != CurrentActiveSeat) {
+        UE_LOG(LogTemp, Warning, TEXT("Invalid action: Seat %d, not their turn."), Seat);
         return false;
     }
 
-    UE_LOG(LogTemp, Log, TEXT("Processing Action - Player: %d, Action: %s, Amount: %d"),
-        PlayerIndex,
-        *UEnum::GetValueAsString(Action),
-        Amount);
-
-    UE_LOG(LogTemp, Log, TEXT("Before Action - Current Bet: %d, Main Pot: %d"),
-        CurrentBet,
-        MainPot);
-
-    FPlayerBets& PlayerBet = PlayerBets[PlayerIndex];
-
-    switch (Action)
-    {
+    switch (Action) {
     case EPokerAction::Check:
-        if (CurrentBet > PlayerBet.CurrentBet)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Invalid check - there's a bet to call"));
-            return false;
-        }
-        PlayerBet.HasActed = true;
-        break;
-
-    case EPokerAction::Call:
-    {
-        int32 CallAmount = CurrentBet - PlayerBet.CurrentBet;
-        if (CallAmount > 0)
-        {
-            PlayerBet.CurrentBet = CurrentBet;
-            PlayerBet.TotalBetThisStreet += CallAmount;
-            MainPot += CallAmount;
-
-            UE_LOG(LogTemp, Log, TEXT("Call processed - Amount: %d, New Player Total: %d"),
-                CallAmount,
-                PlayerBet.TotalBetThisStreet);
-        }
-        PlayerBet.HasActed = true;
-    }
-    break;
-
+        return Amount == 0 && PlayerContributions[Seat] == CurrentBet;
     case EPokerAction::Bet:
-        if (CurrentBet > 0)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Cannot bet - there's already a bet"));
-            return false;
-        }
-        if (Amount < DEFAULT_BIG_BLIND)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Bet must be at least one big blind"));
-            return false;
-        }
-        CurrentBet = Amount;
-        PlayerBet.CurrentBet = Amount;
-        PlayerBet.TotalBetThisStreet += Amount;
-        MainPot += Amount;
-        MinRaise = Amount * 2;
-        break;
-
     case EPokerAction::Raise:
-        if (Amount <= CurrentBet || Amount < MinRaise)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Invalid raise amount: %d"), Amount);
-            return false;
-        }
-        CurrentBet = Amount;
-        PlayerBet.CurrentBet = Amount;
-        PlayerBet.TotalBetThisStreet += Amount;
-        MainPot += Amount;
-        MinRaise = Amount * 2;
-        break;
-
+        return Amount >= (CurrentBet * 2) && Amount > CurrentBet;
+    case EPokerAction::Call:
+        return Amount == (CurrentBet - PlayerContributions[Seat]);
     case EPokerAction::Fold:
-        PlayerBet.HasActed = true;
-        break;
-
+        return true;
     default:
-        UE_LOG(LogTemp, Warning, TEXT("Invalid action"));
         return false;
     }
+}
 
-    UE_LOG(LogTemp, Log, TEXT("After Action - Current Bet: %d, Main Pot: %d, Player Total this Street: %d"),
-        CurrentBet,
-        MainPot,
-        PlayerBet.TotalBetThisStreet);
+void ABettingManager::ProcessAction(int32 Seat, EPokerAction Action, int32 Amount) {
+    if (!ValidateAction(Seat, Action, Amount)) {
+        UE_LOG(LogTemp, Warning, TEXT("Action by Seat %d is invalid."), Seat);
+        return;
+    }
 
-    PlayerBet.HasActed = true;
+    switch (Action) {
+    case EPokerAction::Fold:
+        ActiveSeats.Remove(Seat);
+        UE_LOG(LogTemp, Log, TEXT("Seat %d folds."), Seat);
+        break;
+    case EPokerAction::Check:
+        UE_LOG(LogTemp, Log, TEXT("Seat %d checks."), Seat);
+        break;
+    case EPokerAction::Bet:
+    case EPokerAction::Raise:
+        CurrentBet = Amount;
+        PlayerContributions[Seat] += Amount;
+        UE_LOG(LogTemp, Log, TEXT("Seat %d raises to %d."), Seat, Amount);
+        break;
+    case EPokerAction::Call:
+        PlayerContributions[Seat] += Amount;
+        UE_LOG(LogTemp, Log, TEXT("Seat %d calls for %d."), Seat, Amount);
+        break;
+    }
+
+    AdvanceToNextPlayer();
+}
+
+void ABettingManager::AdvanceToNextPlayer() {
+    if (IsBettingRoundComplete()) {
+        NotifyGamePhaseComplete();
+        return;
+    }
+
+    CurrentActiveSeat = GetNextPlayerToAct(CurrentActiveSeat);
+    if (CurrentActiveSeat == -1) {
+        ActionInProgress = false;
+        NotifyGamePhaseComplete();
+    }
+    else {
+        UE_LOG(LogTemp, Log, TEXT("Next player to act: Seat %d"), CurrentActiveSeat);
+    }
+}
+
+bool ABettingManager::IsBettingRoundComplete() const {
+    for (int32 Seat : ActiveSeats) {
+        if (PlayerContributions[Seat] != CurrentBet && Seat != CurrentActiveSeat) {
+            return false;
+        }
+    }
     return true;
 }
 
-void ABettingManager::CollectBlinds()
-{
-    // Process small blind
-    ProcessAction(1, EPokerAction::Bet, DEFAULT_SMALL_BLIND);
-
-    // Process big blind
-    ProcessAction(2, EPokerAction::Bet, DEFAULT_BIG_BLIND);
-
-    CurrentBet = DEFAULT_BIG_BLIND;
-    MinRaise = DEFAULT_BIG_BLIND * 2;
-
-    UE_LOG(LogTemp, Log, TEXT("Blinds collected. SB: %d, BB: %d"),
-        DEFAULT_SMALL_BLIND, DEFAULT_BIG_BLIND);
+int32 ABettingManager::GetNextPlayerToAct(int32 CurrentSeat) const {
+    int32 StartIndex = ActiveSeats.IndexOfByKey(CurrentSeat);
+    for (int32 i = 1; i < ActiveSeats.Num(); ++i) {
+        int32 NextIndex = (StartIndex + i) % ActiveSeats.Num();
+        if (ActiveSeats.IsValidIndex(NextIndex)) {
+            return ActiveSeats[NextIndex];
+        }
+    }
+    return -1; // No more active players
 }
 
-void ABettingManager::ResetForNewStreet()
-{
-    CurrentBet = 0;
-    MinRaise = DEFAULT_BIG_BLIND;
-
-    for (FPlayerBets& PlayerBet : PlayerBets)
-    {
-        PlayerBet.CurrentBet = 0;
-        PlayerBet.TotalBetThisStreet = 0;
-        PlayerBet.HasActed = false;
-    }
-
-    UE_LOG(LogTemp, Log, TEXT("Betting reset for new street. Pot: %d"), MainPot);
+void ABettingManager::NotifyGamePhaseComplete() {
+    UE_LOG(LogTemp, Log, TEXT("Betting round complete. Proceed to next phase."));
+    // Notify GameManager to advance the game phase
 }
 
-TArray<EPokerAction> ABettingManager::GetValidActions(int32 PlayerIndex) const
-{
-    TArray<EPokerAction> ValidActions;
+int32 ABettingManager::GetCurrentBet() const {
+    return CurrentBet;
+}
 
-    if (!PlayerBets.IsValidIndex(PlayerIndex))
-        return ValidActions;
-
-    const FPlayerBets& PlayerBet = PlayerBets[PlayerIndex];
-
-    // Can always fold (unless checking is free)
-    if (CurrentBet > PlayerBet.CurrentBet)
-    {
-        ValidActions.Add(EPokerAction::Fold);
+int32 ABettingManager::GetMainPot() const {
+    int32 MainPot = 0;
+    for (const auto& Contribution : PlayerContributions) {
+        MainPot += Contribution.Value;
     }
-
-    // Can check if no bet to call
-    if (CurrentBet <= PlayerBet.CurrentBet)
-    {
-        ValidActions.Add(EPokerAction::Check);
-    }
-
-    // Can call if there's a bet to call
-    if (CurrentBet > PlayerBet.CurrentBet)
-    {
-        ValidActions.Add(EPokerAction::Call);
-    }
-
-    // Can bet if no current bet
-    if (CurrentBet == 0)
-    {
-        ValidActions.Add(EPokerAction::Bet);
-    }
-    // Can raise if there's a bet to raise
-    else if (CurrentBet > 0)
-    {
-        ValidActions.Add(EPokerAction::Raise);
-    }
-
-    return ValidActions;
+    return MainPot;
 }
